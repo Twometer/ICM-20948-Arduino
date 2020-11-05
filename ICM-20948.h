@@ -159,7 +159,7 @@ public:
         /* Configuring lib
         ------------------------------------ */
         struct inv_icm20948_serif icm20948_serif;
-        icm20948_serif.context   = this; /* no need */
+        icm20948_serif.context   = this; 
         icm20948_serif.read_reg  = idd_io_hal_read_reg;
         icm20948_serif.write_reg = idd_io_hal_write_reg;
         icm20948_serif.max_read  = 1024 * 16; /* maximum number of bytes allowed per serial read */
@@ -205,6 +205,7 @@ public:
         /* Finishing
         ------------------------------------ */
         inv_icm20948_init_structure(&icm_device);
+		inv_icm20948_set_lowpower_or_highperformance(&icm_device, 1);
 
         if (icm_device.selftest_done && !icm_device.offset_done) {
             // If we've run selftest and not already set the offset.
@@ -231,7 +232,7 @@ private:
 		event.sensor = sensor_id;
 		event.timestamp = timestamp;
 
-		Serial.print((int) context); Serial.print(" -> "); Serial.println(sensor_id);
+		//Serial.print((int) context); Serial.print(" -> "); Serial.println(sensor_id);
 
 		switch (sensor_id) {
 			case INV_SENSOR_TYPE_LINEAR_ACCELERATION:
