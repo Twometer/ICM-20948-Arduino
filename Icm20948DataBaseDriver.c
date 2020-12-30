@@ -231,8 +231,8 @@ int inv_icm20948_initialize_lower_driver(struct inv_icm20948 * s, enum SMARTSENS
 	/* secondary cycle mode should be set all the time */
 	data = BIT_I2C_MST_CYCLE|BIT_ACCEL_CYCLE|BIT_GYRO_CYCLE;
 
-	// Set default mode to low power mode
-	result |= inv_icm20948_set_lowpower_or_highperformance(s, 0);
+	// Set default mode to hp mode
+	result |= inv_icm20948_set_lowpower_or_highperformance(s, 1);
 	
 	// Disable Ivory DMP.
 	if(s->base_state.serial_interface == SERIAL_INTERFACE_SPI)   
@@ -259,8 +259,8 @@ int inv_icm20948_initialize_lower_driver(struct inv_icm20948 * s, enum SMARTSENS
 	// Enable Interrupts.
 	data = 0x2;
 	result |= inv_icm20948_write_mems_reg(s, REG_INT_ENABLE, 1, &data); // Enable DMP Interrupt
-	data = 0x1;
-	result |= inv_icm20948_write_mems_reg(s, REG_INT_ENABLE_2, 1, &data); // Enable FIFO Overflow Interrupt
+	//data = 0x1;
+	//result |= inv_icm20948_write_mems_reg(s, REG_INT_ENABLE_2, 1, &data); // Enable FIFO Overflow Interrupt
 
 	// TRACKING : To have accelerometers datas and the interrupt without gyro enables.
 	data = 0XE4;
@@ -274,8 +274,9 @@ int inv_icm20948_initialize_lower_driver(struct inv_icm20948 * s, enum SMARTSENS
 	// Setup MEMs properties.
 	s->base_state.accel_averaging = 1; //Change this value if higher sensor sample avergaing is required.
 	s->base_state.gyro_averaging = 1;  //Change this value if higher sensor sample avergaing is required.
-	inv_icm20948_set_gyro_divider(s, FIFO_DIVIDER);       //Initial sampling rate 1125Hz/19+1 = 56Hz.
-	inv_icm20948_set_accel_divider(s, FIFO_DIVIDER);      //Initial sampling rate 1125Hz/19+1 = 56Hz.
+	inv_icm20948_set_gyro_divider(s, 18);       //Initial sampling rate 1125Hz/19+1 = 56Hz.
+	inv_icm20948_set_accel_divider(s, 18);      //Initial sampling rate 1125Hz/19+1 = 56Hz.
+	   // use 18 for 62.5 Hz sample rate
 
 	// Init the sample rate to 56 Hz for BAC,STEPC and B2S
 	dmp_icm20948_set_bac_rate(s, DMP_ALGO_FREQ_56);
@@ -284,9 +285,12 @@ int inv_icm20948_initialize_lower_driver(struct inv_icm20948 * s, enum SMARTSENS
 	// FIFO Setup.
 	result |= inv_icm20948_write_single_mems_reg(s, REG_FIFO_CFG, BIT_SINGLE_FIFO_CFG); // FIFO Config. fixme do once? burst write?
 	result |= inv_icm20948_write_single_mems_reg(s, REG_FIFO_RST, 0x1f); // Reset all FIFOs.
-	result |= inv_icm20948_write_single_mems_reg(s, REG_FIFO_RST, 0x1e); // Keep all but Gyro FIFO in reset.
+	result |= inv_icm20948_write_single_mems_reg(s, REG_FIFO_RST, 0x00); // Keep all but Gyro FIFO in reset.
 	result |= inv_icm20948_write_single_mems_reg(s, REG_FIFO_EN, 0x0); // Slave FIFO turned off.
 	result |= inv_icm20948_write_single_mems_reg(s, REG_FIFO_EN_2, 0x0); // Hardware FIFO turned off.
+	
+	// fix invensense fuckups: Bank 0, 0x69 = FIFO_MODE 
+	result |= inv_icm20948_write_single_mems_reg(s, (BANK_0 | 0x69), 0x0); // FIFO Mode: Stream mode to avoid fifo overflow
     
 	s->base_state.lp_en_support = 1;
 	

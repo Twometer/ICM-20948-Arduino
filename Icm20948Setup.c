@@ -571,7 +571,10 @@ int inv_icm20948_poll_sensor(struct inv_icm20948 * s, void * context,
 	uint16_t pickup_state = 0;
 	uint64_t lastIrqTimeUs;
 
-	inv_icm20948_identify_interrupt(s, &int_read_back);
+	int xresult = 0;
+	if (xresult = inv_icm20948_identify_interrupt(s, &int_read_back)) {
+		return xresult;
+	}
 
 	if (true) //int_read_back & (BIT_MSG_DMP_INT | BIT_MSG_DMP_INT_0)) 
   {
@@ -901,21 +904,23 @@ int inv_icm20948_poll_sensor(struct inv_icm20948 * s, void * context,
 			}
 		} while(data_left_in_fifo);
 
-		/* SMD detected by DMP */
+		/*
+		// SMD detected by DMP 
 		if (int_read_back & BIT_MSG_DMP_INT_2) {
 			uint8_t event = 0;
 			handler(context, INV_ICM20948_SENSOR_WAKEUP_SIGNIFICANT_MOTION, s->timestamp[INV_ICM20948_SENSOR_WAKEUP_SIGNIFICANT_MOTION], &event, 0);
 		}
-		/* Step detector triggered by DMP */
+		// Step detector triggered by DMP 
 		if (int_read_back & BIT_MSG_DMP_INT_3) {
 			uint8_t event = 0;
 			handler(context, INV_ICM20948_SENSOR_STEP_DETECTOR, s->timestamp[INV_ICM20948_SENSOR_STEP_DETECTOR], &event, 0);
 		}
-		/* Bring to see detected by DMP */
+		// Bring to see detected by DMP 
 		if (int_read_back & BIT_MSG_DMP_INT_5) {
 			uint8_t event = 0;
 			handler(context, INV_ICM20948_SENSOR_B2S, s->timestamp[INV_ICM20948_SENSOR_B2S], &event, 0);
 		}
+		*/
 	}
 
 	/* Sometimes, the chip can be put in sleep mode even if there is data in the FIFO. If we poll at this moment, the transport layer will wake-up the chip, but never put it back in sleep. */

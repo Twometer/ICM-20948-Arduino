@@ -198,13 +198,15 @@ public:
 
         /* Default config for device
         ------------------------------------ */
-        setMountingMatrix(icm_default_mounting_matrix);
-        setAccelerometerRange(4);
-        setGyroscopeRange(2000);
+        //setMountingMatrix(icm_default_mounting_matrix);
+        //setAccelerometerRange(4);
+        //setGyroscopeRange(2000);
 
         /* Finishing
         ------------------------------------ */
         inv_icm20948_init_structure(&icm_device);
+		inv_icm20948_init_matrix(&icm_device);
+		inv_icm20948_init_scale(&icm_device);
 		inv_icm20948_set_lowpower_or_highperformance(&icm_device, 1);
 
         if (icm_device.selftest_done && !icm_device.offset_done) {
@@ -217,7 +219,11 @@ public:
 
 
     void update() {
-		inv_icm20948_poll_sensor(&icm_device, this, handle_sensor);
+		int result = inv_icm20948_poll_sensor(&icm_device, this, handle_sensor);
+		if (result != 0) {
+			Serial.print("Poll failed with error ");
+			Serial.println(result);
+		}
     }
 
 
@@ -232,7 +238,7 @@ private:
 		event.sensor = sensor_id;
 		event.timestamp = timestamp;
 
-		//Serial.print((int) context); Serial.print(" -> "); Serial.println(sensor_id);
+		//Serial.print((int) context); Serial.print(" -> "); Serial.println(sensortype);
 
 		switch (sensor_id) {
 			case INV_SENSOR_TYPE_LINEAR_ACCELERATION:
@@ -284,20 +290,32 @@ private:
 		}
 	}
 
+
+
 	static int idd_io_hal_read_reg(void *context, uint8_t reg, uint8_t *rbuffer, uint32_t rlen) {
 		ICM20948* parent_class = (ICM20948*) context;
 		int i2c_address = parent_class->getAddress();
 
-		Wire.beginTransmission(i2c_address);
+		Wire.beginTransmission(i2c_address);		
 		Wire.write(reg);
-		Wire.endTransmission(false);
+		
+		int r = Wire.endTransmission(false);
+		
+		static uint8_t lastreg;
+		static uint32_t lastrlen;
+		
+		if (r) Serial.printf("Failed transmit end (err %d) at r_%d len=%d {%d, %d}\n", r, reg, rlen, lastreg, lastrlen);
+		lastreg = reg;
+		lastrlen = rlen;
 
 		uint32_t offset = 0;
 		uint32_t num_received = Wire.requestFrom(i2c_address, rlen);
 		if (num_received == rlen) {
 			for (uint8_t i = 0; i < rlen; i++)
 				rbuffer[i] = Wire.read();
+			return 0;
 		} else return -1;
+		if (r) Serial.printf("Failed transmit receive\n");
 	}
 
 	static int idd_io_hal_write_reg(void *context, uint8_t reg, const uint8_t *wbuffer, uint32_t wlen) {
