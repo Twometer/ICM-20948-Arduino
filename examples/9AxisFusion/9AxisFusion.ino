@@ -1,9 +1,9 @@
-#include <ICM-20948.h>
+#include <ICM20948.h>
+
+#define PIN_SDA	 	4
+#define PIN_SCL 	5
 
 ICM20948 icm;
-
-#define PIN_SDA	 	D6
-#define PIN_SCL 	D5
 
 void fail() {
 	delay(10000);
