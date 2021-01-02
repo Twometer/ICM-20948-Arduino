@@ -32,8 +32,8 @@ private:
     inv_device_icm20948_t device_icm20948;
     inv_device_t *device;
 
-    volatile bool available = false;
-    volatile float quat[] = {1, 0, 0, 0};
+    volatile bool has_data = false;
+    volatile float quat[4] = {1, 0, 0, 0};
 
     static void sensor_event_cb(const inv_sensor_event_t *event, void *context)
     {
@@ -47,7 +47,7 @@ private:
                 icm->quat[1] = event->data.quaternion.quat[1];
                 icm->quat[2] = event->data.quaternion.quat[2];
                 icm->quat[3] = event->data.quaternion.quat[3];
-                icm->available = true;
+                icm->has_data = true;
             }
         }
     }
@@ -107,12 +107,12 @@ public:
 
     bool available()
     {
-        return available;
+        return has_data;
     }
 
     void clearAvailable()
     {
-        available = false;
+        has_data = false;
     }
 
     float x()

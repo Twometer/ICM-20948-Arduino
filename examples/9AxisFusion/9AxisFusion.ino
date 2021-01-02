@@ -5,18 +5,17 @@
 
 ICM20948 icm;
 
-void fail()
-{
-    delay(10000);
-    ESP.restart();
-}
+void fail();
 
 void setup()
 {
     Serial.begin(115200);
+    
+    // init chip
     Wire.begin(PIN_SDA, PIN_SCL);
     int code = icm.begin();
 
+    // check return code
     switch (code)
     {
     case ICM_SUCCESS:
@@ -44,6 +43,7 @@ void setup()
         break;
     }
 
+    // start some sensors
     icm.startSensor(INV_SENSOR_TYPE_MAGNETOMETER, 16000);
     icm.startSensor(INV_SENSOR_TYPE_GAME_ROTATION_VECTOR, 16000);
     icm.startSensor(INV_SENSOR_TYPE_ROTATION_VECTOR, 16000);
@@ -55,9 +55,16 @@ void loop()
 
     if (icm.available())
     {
-        Serial.printf("%f %f %f %f\n", icm.x(), icm.y()), icm.z(), icm.w());
+        Serial.printf("%f %f %f %f\n", icm.x(), icm.y(), icm.z(), icm.w());
         icm.clearAvailable();
     }
 
     delay(16);
+}
+
+
+void fail()
+{
+    delay(10000);
+    ESP.restart();
 }
