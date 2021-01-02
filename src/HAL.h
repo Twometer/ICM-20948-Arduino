@@ -6,6 +6,7 @@
 static int idd_io_hal_init_i2c(void)
 {
     Wire.setClock(400000);
+    return 0;
 }
 
 static int idd_io_hal_read_reg(uint8_t reg, uint8_t *rbuffer, uint32_t rlen)

@@ -32,6 +32,9 @@ private:
     inv_device_icm20948_t device_icm20948;
     inv_device_t *device;
 
+    inv_host_serif_t serif_instance{};
+    inv_sensor_listener_t sensor_listener{};
+
     volatile bool has_data = false;
     volatile float quat[4] = {1, 0, 0, 0};
 
@@ -55,7 +58,7 @@ private:
 public:
     int begin()
     {
-        inv_host_serif_t serif_instance = {
+        serif_instance = {
             idd_io_hal_init_i2c,
             0,
             idd_io_hal_read_reg,
@@ -66,7 +69,7 @@ public:
             INV_HOST_SERIF_TYPE_I2C,
         };
 
-        inv_sensor_listener_t sensor_listener = {
+        sensor_listener = {
             sensor_event_cb, /* callback func */
             this             /* context */
         };
@@ -76,6 +79,8 @@ public:
 
         inv_device_icm20948_init(&device_icm20948, &serif_instance, &sensor_listener, dmp3_image, sizeof(dmp3_image));
         device = inv_device_icm20948_get_base(&device_icm20948);
+
+        delay(1000);
 
         uint8_t whoami = 0xff;
         inv_device_whoami(device, &whoami);
