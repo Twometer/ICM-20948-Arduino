@@ -26,6 +26,12 @@ static const uint8_t dmp3_image[] = {
 #include "Invn/Images/icm20948_img.dmp3a.h"
 };
 
+enum fusion_mode_t
+{
+    FUSION_6_AXIS,
+    FUSION_9_AXIS
+};
+
 class ICM20948
 {
 private:
@@ -34,6 +40,8 @@ private:
 
     inv_host_serif_t serif_instance{};
     inv_sensor_listener_t sensor_listener{};
+
+    fusion_mode_t fusion_mode = FUSION_9_AXIS;
 
     volatile bool has_data = false;
     volatile float quat[4] = {1, 0, 0, 0};
@@ -44,7 +52,17 @@ private:
 
         if (event->status == INV_SENSOR_STATUS_DATA_UPDATED)
         {
-            if (INV_SENSOR_ID_TO_TYPE(event->sensor) == INV_SENSOR_TYPE_ROTATION_VECTOR)
+            int sensor = -1;
+            if (icm->fusion_mode == FUSION_6_AXIS)
+            {
+                sensor = INV_SENSOR_TYPE_GAME_ROTATION_VECTOR;
+            }
+            else
+            {
+                sensor = INV_SENSOR_TYPE_ROTATION_VECTOR;
+            }
+
+            if (INV_SENSOR_ID_TO_TYPE(event->sensor) == sensor)
             {
                 icm->quat[0] = event->data.quaternion.quat[0];
                 icm->quat[1] = event->data.quaternion.quat[1];
@@ -56,6 +74,11 @@ private:
     }
 
 public:
+    void setFusionMode(fusion_mode_t mode)
+    {
+        fusion_mode = mode;
+    }
+
     int begin()
     {
         serif_instance = {
@@ -93,7 +116,7 @@ public:
         if (inv_device_load(device, NULL, dmp3_image, sizeof(dmp3_image), true /* verify */, NULL))
             return ICM_DMP_ERROR;
 
-        if (inv_device_ping_sensor(device, INV_SENSOR_TYPE_UNCAL_MAGNETOMETER))
+        if (fusion_mode == FUSION_9_AXIS && inv_device_ping_sensor(device, INV_SENSOR_TYPE_UNCAL_MAGNETOMETER))
             return ICM_MAG_ERROR;
 
         return ICM_SUCCESS;
