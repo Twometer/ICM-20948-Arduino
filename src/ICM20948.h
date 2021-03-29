@@ -130,7 +130,7 @@ public:
 
     void setHighPowerMode(bool highPower) {
         uint8_t data = highPower ? 1 : 0;
-        inv_device_set_sensor_config(device, 0, INV_SENSOR_CONFIG_POWER_MODE, data, 1);
+        inv_device_set_sensor_config(device, 0, INV_SENSOR_CONFIG_POWER_MODE, &data, 1);
     }
 
     void update()
